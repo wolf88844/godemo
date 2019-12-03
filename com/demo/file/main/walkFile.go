@@ -81,15 +81,15 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 			//处理
 			copyFile(newPath, classPath)
 			log.Println(newPath)
-		} else {
-			//处理
-			if !strings.EqualFold(path, srcPath) && !info.IsDir() {
-				length := len(srcPath)
-				newPath := currentPath + "\\updateFiles" + "\\" + path[length+1:]
-				copyFile(newPath, path)
-				log.Println(newPath)
-			}
 		}
+		//处理
+		if !strings.EqualFold(path, srcPath) && !info.IsDir() {
+			length := len(srcPath)
+			newPath := currentPath + "\\updateFiles" + "\\" + path[length+1:]
+			copyFile(newPath, path)
+			log.Println(newPath)
+		}
+
 	}
 
 	return nil
