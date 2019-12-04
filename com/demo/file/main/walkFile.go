@@ -48,8 +48,10 @@ func main() {
 	targetInput.Scan()
 	targetPath = targetInput.Text()
 	log.Printf("编译后路径为：%s\n", targetPath)
-	//在编译后的路径里查找有一个java对应多个class文件的名称
-	names = file.FindMultiClassFile(targetPath)
+	if targetPath != "" {
+		//在编译后的路径里查找有一个java对应多个class文件的名称
+		names = file.FindMultiClassFile(targetPath)
+	}
 	log.Println("=======")
 	log.Println("请输入比较时间：")
 	timeInput := bufio.NewScanner(os.Stdin)
@@ -88,7 +90,7 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 
 		//判断是否是java文件
 		name := info.Name()
-		if strings.Contains(name, ".java") {
+		if strings.Contains(name, ".java") && targetPath != "" {
 			javaName = path[strings.LastIndex(path, "\\")+1 : strings.LastIndex(path, ".java")]
 			//先找是否属于一对多的情况（一个java文件对多个class文件）
 			if paths, ok := names[javaName]; ok {
