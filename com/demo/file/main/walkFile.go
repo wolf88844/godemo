@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"godemo/com/demo/file"
 	"io"
 	"log"
 	"os"
@@ -19,7 +20,21 @@ var (
 	targetPath, srcPath, currentPath, javaName, classPath string
 	checkTime                                             time.Time
 	count, dircount                                       int16
+	names                                                 map[string][]string
 )
+
+//func main(){
+//	log.Println("请输入编译后路径：")
+//		targetInput := bufio.NewScanner(os.Stdin)
+//		targetInput.Scan()
+//		targetPath = targetInput.Text()
+//		log.Printf("编译后路径为：%s\n", targetPath)
+//		//在编译后的路径里查找有一个java对应多个class文件的名称
+//		result := file.FindMultiClassFile(targetPath)
+//		for k,v:=range result{
+//			fmt.Printf("%s %s\n",k,v)
+//		}
+//}
 
 func main() {
 	log.Println("请输入文件路径：")
@@ -33,6 +48,8 @@ func main() {
 	targetInput.Scan()
 	targetPath = targetInput.Text()
 	log.Printf("编译后路径为：%s\n", targetPath)
+	//在编译后的路径里查找有一个java对应多个class文件的名称
+	names = file.FindMultiClassFile(targetPath)
 	log.Println("=======")
 	log.Println("请输入比较时间：")
 	timeInput := bufio.NewScanner(os.Stdin)
@@ -73,16 +90,26 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 		name := info.Name()
 		if strings.Contains(name, ".java") {
 			javaName = path[strings.LastIndex(path, "\\")+1 : strings.LastIndex(path, ".java")]
-			//找到java类对应的class文件地址
-			filepath.Walk(targetPath, wolfTargetFunc)
+			//先找是否属于一对多的情况（一个java文件对多个class文件）
+			if paths, ok := names[javaName]; ok {
+				for _, value := range paths {
+					classPath = value
+					s := classPath[len(targetPath)+1:]
+					newPath := currentPath + "\\updateFiles" + "\\" + s
+					//处理class
+					copyFile(newPath, classPath)
+				}
+			} else {
+				//找到java类对应的class文件地址
+				filepath.Walk(targetPath, wolfTargetFunc)
+				s := classPath[len(targetPath)+1:]
+				newPath := currentPath + "\\updateFiles" + "\\" + s
+				//处理class
+				copyFile(newPath, classPath)
+			}
 
-			s := classPath[len(targetPath)+1:]
-			newPath := currentPath + "\\updateFiles" + "\\" + s
-			//处理
-			copyFile(newPath, classPath)
-			log.Println(newPath)
 		}
-		//处理
+		//处理原文件
 		if !strings.EqualFold(path, srcPath) && !info.IsDir() {
 			length := len(srcPath)
 			newPath := currentPath + "\\updateFiles" + "\\" + path[length+1:]
