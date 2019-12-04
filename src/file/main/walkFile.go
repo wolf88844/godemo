@@ -27,7 +27,7 @@ func main() {
 	log.Println("请输入文件路径：")
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
-	srcPath := input.Text()
+	srcPath = input.Text()
 	log.Printf("原路径为：%s\n", srcPath)
 	log.Println("=======")
 
@@ -80,7 +80,6 @@ func main() {
 
 func walkFunc(path string, info os.FileInfo, err error) error {
 	if info.ModTime().After(checkTime) {
-
 		//计数
 		if info.IsDir() {
 			dircount++
@@ -103,7 +102,6 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 				filepath.Walk(targetPath, wolfTargetFunc)
 				copyClassFile()
 			}
-
 		}
 		//处理原文件
 		if !strings.EqualFold(path, srcPath) && !info.IsDir() {
