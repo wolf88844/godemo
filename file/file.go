@@ -13,7 +13,7 @@ import (
 
 var (
 	Names                           map[string][]string
-	CheckTime                       time.Time
+	BeginTime, EndTime              time.Time
 	Count                           int16
 	TargetPath, classPath, javaName string
 )
@@ -53,7 +53,7 @@ func ErgodicFiles(srcPath string) {
 }
 
 func walkFilesFunc(path string, info os.FileInfo, err error) error {
-	if info.ModTime().After(CheckTime) {
+	if info.ModTime().After(BeginTime) && info.ModTime().Before(EndTime) {
 		//计数
 		Count++
 		//判断是否是java文件

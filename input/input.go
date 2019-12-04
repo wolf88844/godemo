@@ -56,9 +56,9 @@ func InputOutFileDirPath() string {
 	return targetDirName
 }
 
-//输入判断时间
-func InputCheckTime() time.Time {
-	log.Println("请输入比较时间：")
+//输入开始时间
+func InputBeginTime() time.Time {
+	log.Println("请输入开始时间：")
 	timeInput := bufio.NewScanner(os.Stdin)
 	timeInput.Scan()
 	text := timeInput.Text()
@@ -67,8 +67,25 @@ func InputCheckTime() time.Time {
 		text = now.Format(currentTimeTemple)
 	}
 	stamp, _ := time.ParseInLocation(timeTemplate, text, time.Local)
-	checkTime := stamp.Local()
-	log.Printf("比较时间为：%v\n", checkTime)
+	beginTime := stamp.Local()
+	log.Printf("开始时间为：%v\n", beginTime)
 	log.Println("=======")
-	return checkTime
+	return beginTime
+}
+
+//输入结束时间
+func InputEndTime() time.Time {
+	log.Println("请输入结束时间：")
+	timeInput := bufio.NewScanner(os.Stdin)
+	timeInput.Scan()
+	text := timeInput.Text()
+	if text == "" {
+		now := time.Now()
+		text = now.Format(currentTimeTemple)
+	}
+	stamp, _ := time.ParseInLocation(timeTemplate, text, time.Local)
+	beginTime := stamp.Local()
+	log.Printf("结束时间为：%v\n", beginTime)
+	log.Println("=======")
+	return beginTime
 }
