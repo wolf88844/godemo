@@ -42,7 +42,7 @@ func InputTargetPath() (string, map[string][]string) {
 
 //输入导出文件名称
 func InputOutFileDirPath() string {
-	log.Println("请输入复制后的文件夹名称：")
+	log.Println("请输入复制后的路径：")
 	targetDirInput := bufio.NewScanner(os.Stdin)
 	targetDirInput.Scan()
 	var targetDirName = targetDirInput.Text()
