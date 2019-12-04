@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"godemo/com/demo/file"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,24 +17,11 @@ const (
 )
 
 var (
-	targetDirName, targetPath, srcPath, currentPath, javaName, classPath string
-	checkTime                                                            time.Time
-	count, dircount                                                      int16
-	names                                                                map[string][]string
+	targetDirName, targetPath, srcPath, currentPath, javaName, classPath, name, classpath string    //编译后目录名称 编译后路径 原路径 当前路径 java文件名称 class文件名称
+	checkTime                                                                             time.Time //判断时间
+	count, dircount                                                                       int16     //文件数量 文件夹数量
+	namesPath, names                                                                      map[string][]string
 )
-
-//func main(){
-//	log.Println("请输入编译后路径：")
-//		targetInput := bufio.NewScanner(os.Stdin)
-//		targetInput.Scan()
-//		targetPath = targetInput.Text()
-//		log.Printf("编译后路径为：%s\n", targetPath)
-//		//在编译后的路径里查找有一个java对应多个class文件的名称
-//		result := file.FindMultiClassFile(targetPath)
-//		for k,v:=range result{
-//			fmt.Printf("%s %s\n",k,v)
-//		}
-//}
 
 func main() {
 	log.Println("请输入文件路径：")
@@ -43,6 +30,7 @@ func main() {
 	srcPath = input.Text()
 	log.Printf("原路径为：%s\n", srcPath)
 	log.Println("=======")
+
 	log.Println("请输入编译后路径：")
 	targetInput := bufio.NewScanner(os.Stdin)
 	targetInput.Scan()
@@ -50,9 +38,10 @@ func main() {
 	log.Printf("编译后路径为：%s\n", targetPath)
 	if targetPath != "" {
 		//在编译后的路径里查找有一个java对应多个class文件的名称
-		names = file.FindMultiClassFile(targetPath)
+		namesPath = FindMultiClassFile(targetPath)
 	}
 	log.Println("=======")
+
 	log.Println("请输入复制后的文件夹名称：")
 	targetDirInput := bufio.NewScanner(os.Stdin)
 	targetDirInput.Scan()
@@ -61,6 +50,7 @@ func main() {
 		targetDirName = "updateFiles"
 	}
 	log.Println("=======")
+
 	log.Println("请输入比较时间：")
 	timeInput := bufio.NewScanner(os.Stdin)
 	timeInput.Scan()
@@ -76,10 +66,12 @@ func main() {
 	}
 	log.Printf("截止时间为：%v\n", checkTime)
 	log.Println("=======")
+
 	//获取当前路径
 	currentPath, _ = os.Getwd()
 	log.Printf("当前路径%s\n", currentPath)
 	log.Println("=======")
+
 	//遍历文件夹
 	filepath.Walk(srcPath, walkFunc)
 
@@ -101,21 +93,15 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 		if strings.Contains(name, ".java") && targetPath != "" {
 			javaName = path[strings.LastIndex(path, "\\")+1 : strings.LastIndex(path, ".java")]
 			//先找是否属于一对多的情况（一个java文件对多个class文件）
-			if paths, ok := names[javaName]; ok {
+			if paths, ok := namesPath[javaName]; ok {
 				for _, value := range paths {
 					classPath = value
-					s := classPath[len(targetPath)+1:]
-					newPath := currentPath + "\\" + targetDirName + "\\" + s
-					//处理class
-					copyFile(newPath, classPath)
+					copyClassFile()
 				}
 			} else {
 				//找到java类对应的class文件地址
 				filepath.Walk(targetPath, wolfTargetFunc)
-				s := classPath[len(targetPath)+1:]
-				newPath := currentPath + "\\" + targetDirName + "\\" + s
-				//处理class
-				copyFile(newPath, classPath)
+				copyClassFile()
 			}
 
 		}
@@ -128,10 +114,19 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 		}
 
 	}
-
 	return nil
 }
 
+func copyClassFile() {
+	s := classPath[len(targetPath)+1:]
+	newPath := currentPath + "\\" + targetDirName + "\\" + s
+	//处理class
+	copyFile(newPath, classPath)
+}
+
+/**
+查询一对一文件格式的遍历方法
+*/
 func wolfTargetFunc(path string, info os.FileInfo, err error) error {
 	if !info.IsDir() && strings.EqualFold(info.Name(), javaName+".class") {
 		classPath = path
@@ -140,6 +135,9 @@ func wolfTargetFunc(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
+/**
+执行文件复制操作
+*/
 func copyFile(dstFileName string, srcFileName string) (err error) {
 	srcFile, err := os.OpenFile(srcFileName, os.O_RDONLY, 0666)
 	if err != nil {
@@ -178,6 +176,9 @@ func copyFile(dstFileName string, srcFileName string) (err error) {
 	return nil
 }
 
+/**
+判断文件是否存在
+*/
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
@@ -187,4 +188,51 @@ func PathExists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, nil
+}
+
+//获取一个java文件对应多个class文件的数据
+func FindMultiClassFile(targetPath string) map[string][]string {
+	names = make(map[string][]string)
+	filepath.Walk(targetPath, walkMultiFunc)
+	return names
+}
+
+/**
+遍历文件，查询多个class文件，将文件名与路径放入map中
+*/
+func walkMultiFunc(path string, info os.FileInfo, err error) error {
+	if info.IsDir() {
+		return nil
+	}
+	if strings.Contains(path, "$") {
+		index := strings.LastIndex(path, "$") - 1
+		lastIndex := strings.LastIndex(path, "\\") + 1
+		name := path[lastIndex : index+1]
+		dirPath := path[:lastIndex-1]
+		if _, ok := names[name]; !ok {
+			log.Printf("有多个class文件的java文件名称为：%s,文件夹路径为： %s\n", name, dirPath)
+			//查找对应所有的class文件
+			names[name] = getFileList(dirPath, name)
+		}
+
+	}
+	return nil
+}
+
+/**
+递归查找包含有name的文件名称
+*/
+func getFileList(path string, name string) []string {
+	var paths []string
+	fs, _ := ioutil.ReadDir(path)
+	for _, file := range fs {
+		if file.IsDir() {
+			getFileList(path+file.Name()+"\\", name)
+		} else {
+			if strings.HasPrefix(file.Name(), name) {
+				paths = append(paths, path+"\\"+file.Name())
+			}
+		}
+	}
+	return paths
 }
