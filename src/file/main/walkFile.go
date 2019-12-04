@@ -24,7 +24,10 @@ var (
 )
 
 func main() {
-	srcPath = InputSrcPath()
+	log.Println("请输入文件路径：")
+	input := bufio.NewScanner(os.Stdin)
+	input.Scan()
+	srcPath := input.Text()
 	log.Printf("原路径为：%s\n", srcPath)
 	log.Println("=======")
 
