@@ -17,10 +17,10 @@ const (
 )
 
 var (
-	targetPath, srcPath, currentPath, javaName, classPath string
-	checkTime                                             time.Time
-	count, dircount                                       int16
-	names                                                 map[string][]string
+	targetDirName, targetPath, srcPath, currentPath, javaName, classPath string
+	checkTime                                                            time.Time
+	count, dircount                                                      int16
+	names                                                                map[string][]string
 )
 
 //func main(){
@@ -51,6 +51,14 @@ func main() {
 	if targetPath != "" {
 		//在编译后的路径里查找有一个java对应多个class文件的名称
 		names = file.FindMultiClassFile(targetPath)
+	}
+	log.Println("=======")
+	log.Println("请输入复制后的文件夹名称：")
+	targetDirInput := bufio.NewScanner(os.Stdin)
+	targetDirInput.Scan()
+	targetDirName = targetDirInput.Text()
+	if targetDirName == "" {
+		targetDirName = "updateFiles"
 	}
 	log.Println("=======")
 	log.Println("请输入比较时间：")
@@ -97,7 +105,7 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 				for _, value := range paths {
 					classPath = value
 					s := classPath[len(targetPath)+1:]
-					newPath := currentPath + "\\updateFiles" + "\\" + s
+					newPath := currentPath + "\\" + targetDirName + "\\" + s
 					//处理class
 					copyFile(newPath, classPath)
 				}
@@ -105,7 +113,7 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 				//找到java类对应的class文件地址
 				filepath.Walk(targetPath, wolfTargetFunc)
 				s := classPath[len(targetPath)+1:]
-				newPath := currentPath + "\\updateFiles" + "\\" + s
+				newPath := currentPath + "\\" + targetDirName + "\\" + s
 				//处理class
 				copyFile(newPath, classPath)
 			}
@@ -114,7 +122,7 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 		//处理原文件
 		if !strings.EqualFold(path, srcPath) && !info.IsDir() {
 			length := len(srcPath)
-			newPath := currentPath + "\\updateFiles" + "\\" + path[length+1:]
+			newPath := currentPath + "\\" + targetDirName + "\\" + path[length+1:]
 			copyFile(newPath, path)
 			log.Println(newPath)
 		}
