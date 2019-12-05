@@ -19,6 +19,9 @@ func main() {
 	//输入判断结束时间
 	file.EndTime = input.InputEndTime()
 	//遍历原地址文件
-	file.ErgodicFiles(variable.SrcPath)
+	err := file.ErgodicFiles(variable.SrcPath)
+	if err != nil {
+		log.Fatalf("出现错误： %v", err)
+	}
 	log.Printf("共有 %d 个文件需要更新\n", file.Count)
 }
