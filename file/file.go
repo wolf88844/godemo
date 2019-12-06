@@ -48,8 +48,9 @@ func walkMultiClassFunc(path string, info os.FileInfo, err error) error {
 }
 
 //遍历原地址文件
-func ErgodicFiles(srcPath string) {
+func ErgodicFiles(srcPath string) error {
 	filepath.Walk(srcPath, walkFilesFunc)
+	return nil
 }
 
 func walkFilesFunc(path string, info os.FileInfo, err error) error {
